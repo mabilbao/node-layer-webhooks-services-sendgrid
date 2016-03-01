@@ -78,7 +78,19 @@ module.exports = function(options) {
           try {
             if (err) console.error(hook.name + ': ', err);
             else {
-              prepareEmail(message, sender, user, recipient);
+	      queue.createJob(hook.name + ' send-email', {
+		message: message,
+		sender: sender,
+		user: user,
+		userId: recipient
+	      }).attempts(10).backoff({
+		type: 'exponential',
+		delay: 10000
+	      }).save(function(err) {
+		if (err) {
+		  console.error(new Date().toLocaleString() + ': ' + webhookName + ': Unable to create Kue process', err);
+		}
+	      });
             }
           } catch(e) {
             console.error(hook.name + ': ', e);
@@ -91,37 +103,39 @@ module.exports = function(options) {
     });
   }
 
+
   /**
    * Calculate all the fields needed, and if present call the updateObject method.  Then call sendEmail.
    */
-  function prepareEmail(message, sender, user, userId) {
-    message.sender = sender;
-    message.recipient = user;
+  queue.process(hook.name + ' send-email', function(job, done) {
+    var message = job.data.message;
+    message.sender = job.data.sender;
+    message.recipient = job.data.user;    
     message.text = message.parts.filter(function(part) {
       return part.mime_type === 'text/plain';
     }).map(function(part) {
       return part.body;
     }).join('\n');
 
-    console.log(hook.name + ': Sending email to ' + user.email + ' for not reading message');
+    console.log(hook.name + ': Sending email to ' + job.data.user.email + ' for not reading message');
     var fromAddress = btoa(JSON.stringify({
       conversation: message.conversation.id,
-      user: userId
+      user: job.data.userId
     }));
 
     if (options.updateObject) {
       options.updateObject(message, function(message) {
-        sendEmail(message, user.email, fromAddress + '@' + options.emailDomain);
+        sendEmail(message, job.data.user.email, fromAddress + '@' + options.emailDomain, done);
       });
     } else {
-      sendEmail(message, user.email, fromAddress + '@' + options.emailDomain);
+      sendEmail(message, job.data.user.email, fromAddress + '@' + options.emailDomain, done);
     }
-  }
+  });
 
   /**
    * Send the specified email using templates where suited to populate the fields.
    */
-  function sendEmail(message, to, from) {
+  function sendEmail(message, to, from, done) {
    sendgrid.send({
      to: to,
      from: from,
@@ -133,6 +147,7 @@ module.exports = function(options) {
      if (err) {
        return console.error(hook.name + ': ', err);
      }
+     done(err);
    });
   }
 };
