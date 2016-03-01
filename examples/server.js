@@ -1,5 +1,6 @@
 // Setup the express server
 require('dotenv').load();
+
 var express = require('express');
 var https = require('https');
 var fs = require('fs');

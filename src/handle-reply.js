@@ -3,7 +3,6 @@
  * This module will only handle emails to that subdomain if it has a correctly formatted TO field.
  * Any correctly formed replies will get posted back to the Conversation.
  */
-//var multiparty = require('multiparty');
 
 var Debug = require('debug');
 var EmailReplyParser = require('emailreplyparser').EmailReplyParser;
@@ -83,6 +82,7 @@ module.exports = function(options) {
       }
     });
   });
+<<<<<<< HEAD
 
   /**
    * The Default mechansism for getting the identity of the email sender
