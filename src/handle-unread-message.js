@@ -78,19 +78,19 @@ module.exports = function(options) {
           try {
             if (err) console.error(hook.name + ': ', err);
             else {
-	      queue.createJob(hook.name + ' send-email', {
-		message: message,
-		sender: sender,
-		user: user,
-		userId: recipient
-	      }).attempts(10).backoff({
-		type: 'exponential',
-		delay: 10000
-	      }).save(function(err) {
-		if (err) {
-		  console.error(new Date().toLocaleString() + ': ' + webhookName + ': Unable to create Kue process', err);
-		}
-	      });
+      	      queue.createJob(hook.name + ' send-email', {
+            		message: message,
+            		sender: sender,
+            		user: user,
+            		userId: recipient
+            	}).attempts(10).backoff({
+            		type: 'exponential',
+            		delay: 10000
+            	}).save(function(err) {
+            		if (err) {
+            		  console.error(new Date().toLocaleString() + ': ' + webhookName + ': Unable to create Kue process', err);
+            		}
+      	      });
             }
           } catch(e) {
             console.error(hook.name + ': ', e);
@@ -110,7 +110,7 @@ module.exports = function(options) {
   queue.process(hook.name + ' send-email', function(job, done) {
     var message = job.data.message;
     message.sender = job.data.sender;
-    message.recipient = job.data.user;    
+    message.recipient = job.data.user;
     message.text = message.parts.filter(function(part) {
       return part.mime_type === 'text/plain';
     }).map(function(part) {

@@ -1,9 +1,12 @@
 // Setup the express server
 require('dotenv').load();
+
 var express = require('express');
 var https = require('https');
 var fs = require('fs');
 var app = express();
+
+var getUser = require('./my-custom-get-user');
 
 // If using a separate server for listening to sendgrid, create the new server. Typically needed when using a self-signed certificate
 // as sendgrid will not talk to it... but will talk to an http server.
@@ -95,7 +98,7 @@ function updateObject(message, callback) {
 /* Initialize the layer-sendgrid webhooks server */
 function init() {
   require('../index')({
-    getUser: require('./my-custom-get-user'),
+    getUser: getUser,
     webhookServices: webhooksClient,
     client: layerClient,
     url: URL,

@@ -3,7 +3,6 @@
  * This module will only handle emails to that subdomain if it has a correctly formatted TO field.
  * Any correctly formed replies will get posted back to the Conversation.
  */
-//var multiparty = require('multiparty');
 
 var EmailReplyParser = require('emailreplyparser').EmailReplyParser;
 var atob = require('atob');
