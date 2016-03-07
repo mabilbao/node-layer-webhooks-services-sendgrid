@@ -5,6 +5,7 @@
  */
 //var multiparty = require('multiparty');
 
+var Debug = require('debug');
 var EmailReplyParser = require('emailreplyparser').EmailReplyParser;
 var atob = require('atob');
 var multer = require('multer')({
@@ -19,6 +20,7 @@ module.exports = function(options) {
   var queue = require('kue').createQueue();
   if (!options.sApp) options.sApp = options.app;
   var webhookName = options.name;
+  var logger = Debug('layer-webhooks-sendgrid:' + webhookName.replace(/\s/g,'-') + ':email-listener');
 
   // Listen for webhook events and parse the results
   options.sApp.post(options.sendgrid_path || '/new-email', multer, function(req, res) {
@@ -90,8 +92,7 @@ module.exports = function(options) {
         console.error(new Date().toLocaleString() + ': ' + webhookName + ': Failed to post email to Conversation', err);
         done(err);
       } else {
-        console.log(new Date().toLocaleString() + ': ' + webhookName + ': Response posted to Conversation ',
-          job.data.conversation + ' for ' + job.data.sender + ': ' + job.data.text);
+        logger('Response posted to Conversation ', job.data.conversation + ' for ' + job.data.sender + ': ' + job.data.text);
         done();
       }
     });

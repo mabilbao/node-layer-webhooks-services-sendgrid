@@ -3,6 +3,7 @@
  * See README for description of parameters.
  */
 var btoa = require('btoa');
+var Debug = require('debug');
 var _ = require('underscore');
 
 var DEFAULT_TEMPLATES = {
@@ -23,6 +24,7 @@ module.exports = function(options) {
     fromName: _.template(options.templates.fromName || DEFAULT_TEMPLATES.name)
   };
   if (!options.delay) options.delay = '1 hour';
+  var logger = Debug('layer-webhooks-sendgrid:' + options.name.replace(/\s/g,'-') + ':email-notifier');
 
   // Define the receipts webhook structure
   var hook = {
@@ -76,7 +78,7 @@ module.exports = function(options) {
         options.getUser(recipient, function(err, user) {
           count++;
           try {
-            if (err) console.error(hook.name + ': ', err);
+            if (err) console.error(new Date().toLocaleString() + ': ' + hook.name + ': ', err);
             else {
 	      queue.createJob(hook.name + ' send-email', {
 		message: message,
@@ -88,12 +90,12 @@ module.exports = function(options) {
 		delay: 10000
 	      }).save(function(err) {
 		if (err) {
-		  console.error(new Date().toLocaleString() + ': ' + webhookName + ': Unable to create Kue process', err);
+		  console.error(new Date().toLocaleString() + ': ' + hook.name + ': Unable to create Kue process', err);
 		}
 	      });
             }
           } catch(e) {
-            console.error(hook.name + ': ', e);
+            console.error(new Date().toLocaleString() + ': ' + hook.name + ': ', e);
           }
           if (count === recipients.length) {
             done();
@@ -117,7 +119,7 @@ module.exports = function(options) {
       return part.body;
     }).join('\n');
 
-    console.log(hook.name + ': Sending email to ' + job.data.user.email + ' for not reading message');
+    logger('Sending email to ' + job.data.user.email + ' for not reading message');
     var fromAddress = btoa(JSON.stringify({
       conversation: message.conversation.id,
       user: job.data.userId
@@ -145,7 +147,7 @@ module.exports = function(options) {
      html: templates.html(message)
    }, function(err, json) {
      if (err) {
-       return console.error(hook.name + ': ', err);
+       return console.error(new Date().toLocaleString() + ': ' + hook.name + ': ', err);
      }
      done(err);
    });

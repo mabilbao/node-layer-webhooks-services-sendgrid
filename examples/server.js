@@ -101,7 +101,7 @@ function init() {
     url: URL,
     app: app,
     sApp: sApp,
-    delay: '30 minutes',
+    delay: '30 seconds',
     secret: 'Lord of the Mog has jammed your radar',
     emailDomain: process.env.EMAIL_DOMAIN,
     sendgridKey: process.env.SENDGRID_API,
