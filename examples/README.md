@@ -15,13 +15,14 @@ with a suitable `getUser` function described in the [README](../README.md).
 2. CD into folder: `cd node-layer-webhooks-services-sendgrid`
 3. Create Heroku App: `heroku create`
 4. Deploy to Heroku: `git push heroku master`
-5. Configure your App ID: `heroku config:set LAYER_APP_ID=YOUR_APP_ID`
-6. Configure your Authentication Token: `heroku config:set LAYER_BEARER_TOKEN=YOUR_TOKEN`
-7. Configure email hostname: `heroku config:set EMAIL_DOMAIN=YOUR DOMAIN` (e.g. 'sample-mx.mycompany.com'; this will be used as the FROM field in all emails)
-8. Configure your Sendgrid API Token: `heroku config:set SENDGRID_API=YOUR_SENDGRID_TOKEN`
-9. Configure your Hostname: `heroku config:set HOST=$(heroku apps:info
-   -s  | grep web-url | cut -d= -f2)`
-10. Install `heroku-redis`: Instructions at https://devcenter.heroku.com/articles/heroku-redis#installing-the-cli-plugin
+5. Configure your
+   * Layer App ID: `heroku config:set LAYER_APP_ID=YOUR_APP_ID`
+   * Layer Authentication Token: `heroku config:set LAYER_BEARER_TOKEN=YOUR_TOKEN`
+   * Email hostname: `heroku config:set EMAIL_DOMAIN=YOUR DOMAIN` (e.g. 'sample-mx.mycompany.com'; this will be used as the FROM field in all emails)
+   * Sendgrid API Token: `heroku config:set SENDGRID_API=YOUR_SENDGRID_TOKEN`
+   * Logger: `heroku config:set 'DEBUG=*,-body-parser:json, -express:*'`
+   * Hostname: `heroku config:set HOST=$(heroku apps:info -s  | grep web-url | cut -d= -f2)`
+6. Install `heroku-redis`: Instructions at https://devcenter.heroku.com/articles/heroku-redis#installing-the-cli-plugin
 
 You should now be able to send messages, change conversation titles, and see the webhook examples respond.
 
