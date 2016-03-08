@@ -11,8 +11,8 @@ with a suitable `getUser` function described in the [README](../README.md).
 
 ## Running in Heroku
 
-1. Get the repo: `git clone git@github.com:layerhq/node-layer-webhooks-services.git`
-2. CD into folder: `cd node-layer-webhooks-services`
+1. Get the repo: `git clone git@github.com:layerhq/node-layer-webhooks-services-sendgrid.git`
+2. CD into folder: `cd node-layer-webhooks-services-sendgrid`
 3. Create Heroku App: `heroku create`
 4. Deploy to Heroku: `git push heroku master`
 5. Configure your App ID: `heroku config:set LAYER_APP_ID=YOUR_APP_ID`
