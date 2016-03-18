@@ -1,6 +1,6 @@
 {
   "name": "layer-webhooks-sendgrid",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Sendgrid integration triggered by Layer Webhooks",
   "main": "index.js",
   "engines": {
@@ -17,7 +17,7 @@
     "btoa": "^1.1.2",
     "emailreplyparser": "0.0.5",
     "kue": "^0.10.5",
-    "layer-api": "^2.1.0",
+    "layer-api": "^2.2.0",
     "layer-webhooks-services": "^1.0.0",
     "debug": "^2.2.0",
     "multer": "^1.1.0",

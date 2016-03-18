@@ -13,15 +13,12 @@ The following actions are needed:
 
 ## Setting up Identity Services
 
-Layer's Webhooks do not provide key values needed to drive email services.  Layer's webhook
-events provides you with User IDs of recipients of Messages, but does NOT provide
-personal names, email addresses, or other things needed to contact a person and to provide
-a personalized message.
+Layer's Webhooks do not provide the recipient's email address, only their userId.  In order to send them an email, we will need to get their email address.  The default behavior is to automatically get the address from the Layer's Identities service; however, this only works if you've actually registered your user's address there.
 
-A key parameter for this module is `getUser` which should return a User Object.  Your User Object should provide a `name` and `email` fields; other custom fields can be added and used from your templates.
+If you are not using the Layer Identities service and putting email addresses there, then provide a `identities` function when configuring this module. The `identities` function should return a User Object.  Your User Object should provide `name` and `email` fields; other custom fields can be added and used from your templates.
 
 ```javascript
-function getUser(userId, callback) {
+function identities(userId, callback) {
     // Lookup in a database or query a web service to get details of this user
     doLookup(userId, function(err, result) {
        callback(error, {
@@ -80,8 +77,8 @@ Each of these templates should expect to run on a Message Object as defined by t
 
 In addition, the following properties will be added:
 
-* `sender` Object: This will be the object you provide via a `getUser` call on the sender of this Message.
-* `recipient` Object: This will be the object you provide via a `getUser` call on a single recipient
+* `sender` Object: This will be an object returned from Layer's Identity Service _or_ an object you provide via an `identities` call on the sender of this Message.
+* `recipient` Object: This will be an object returned from Layer's Identity Service _or_ an object you provide via an `identities` call on a single recipient
 * `text` String: This will extract any text/plain parts and concatenate their body's together into an easily accessed string
 
 A typical template might look like:
@@ -110,12 +107,12 @@ The following parameters are supported:
 | secret                | Yes       | Any unique string that nobody outside your company knows; used to validate webhook requests |
 | sendgridKey           | Yes       | Your sendgrid API Key |
 | emailDomain           | Yes       | Full hostname registered with sendgrid; all From fields will use this when sending emails. |
-| getUser               | Yes       | Function that looks up a user's info and returns the results via callback |
+| identities            | Yes       | Function that looks up a user's info and returns the results via callback |
 | templates             | No        | Templates Object for the message, subject and sender |
 | name                  | No        | Name to assign the webhook; needed if your using this repository for multiple webhooks. |
 | path                  | No        | Path that the express app will use to listen for unread message webhook requests. Customize if using multiple copies of this repo. |
 | sendgrid_path         | No        | Path that the express app will use to listen for new email webhook requests. |
-| recipient_status_filter | No      | Array of user states that justify notification; `['sent']` (Message could not be delivered yet); `['sent', 'delivered']` (Message is undelivered OR simply unread); `['delivered']` (Message is delivered but not read). Default is `['sent', 'delivered']` |
+| reportForStatus       | No        | Array of user states that justify notification; `['sent']` (Message could not be delivered yet); `['sent', 'delivered']` (Message is undelivered OR simply unread); `['delivered']` (Message is delivered but not read). Default is `['sent', 'delivered']` |
 | updateObject          | No        | Asynchronous callback for decorating the Message object being fed into the templates |
 
 ### The updateObject method
@@ -153,7 +150,6 @@ var webhooksClient = new LayerWebhooks({
 
 secureExpressApp.listen(PORT, function() {
     require('layer-webhooks-service-sendgrid')({
-        getUser: require('./my-custom-get-user'),
         client: webhooksClient,
         url: 'https://mydomain.com',
         app: secureExpressApp,

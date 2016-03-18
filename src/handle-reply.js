@@ -24,23 +24,11 @@ module.exports = function(options) {
 
   // Listen for webhook events and parse the results
   options.sApp.post(options.sendgrid_path || '/new-email', multer, function(req, res) {
-    try {
-      // Extract the conversation.id and the sender's userId from the email's TO field.
-      var toConversation, fromUser;
-      try {
-        var to = req.body.to.split(/\s*,\s*/).filter(function(to) {
-          return to.indexOf(options.emailDomain) !== -1;
-        })[0];
+    // Extract the conversation.id and the sender's userId from the email's TO field.
+    getContext(req.body.to, req.body.from, function(toConversation, fromUser) {
 
-        if (to.indexOf('<') !== -1) to = to.replace(/^.*<(.*?)>.*$/m, '$1');
-        to = to.replace(/@.*$/, '');
-        var toObj = JSON.parse(atob(to));
-        toConversation = toObj.conversation;
-        fromUser = toObj.user;
-        if (!toConversation || !fromUser) throw new Error('To field lacks key properties');
-      } catch (e) {
-        console.error(new Date().toLocaleString() + ': ' + webhookName + ': Failed to parse to field: ' + req.body.to, e);
-        return res.sendStatus(200);
+      if (!toConversation || !fromUser) {
+        return logger('Email \`To\` field lacks key properties; ignoring email', req.body);
       }
 
       // Extract the text from the email
@@ -78,9 +66,7 @@ module.exports = function(options) {
           console.error(new Date().toLocaleString() + ': ' + webhookName + ': Unable to create Kue process', err);
         }
       });
-    } catch (err) {
-      console.error(new Date().toLocaleString() + ': ' + webhookName + ': Failed to parse email:', err);
-    }
+    });
     res.sendStatus(200);
   });
 
@@ -97,4 +83,52 @@ module.exports = function(options) {
       }
     });
   });
+
+  /**
+   * The Default mechansism for getting the identity of the email sender
+   * and comparing it to the actual email reported by sendgrid.
+   */
+  function getUserFromIdentities(userId, callback) {
+    options.client.identities.get(userId, function(err, response) {
+      var identity = err ? null : response.body;
+      if (identity) identity.email = identity.email_address;
+      callback(err, identity);
+    });
+  }
+
+  /**
+   * Get the userId of the message sender, and the Conversation ID.
+   * If either is lacking, then we can't post the Message to
+   * a Conversation.
+   */
+  function getContext(toFull, from, callback) {
+    var toConversation, fromUser;
+    to = toFull.split(/\s*,\s*/).filter(function(recipient) {
+      return recipient.indexOf(options.emailDomain) !== -1;
+    })[0];
+
+    if (to.indexOf('<') !== -1) to = to.replace(/^.*<(.*?)>.*$/m, '$1');
+    to = to.replace(/@.*$/, '');
+
+    if (from.indexOf('<') !== -1) from = from.replace(/^.*<(.*?)>.*$/m, '$1');
+
+    var toObj = JSON.parse(atob(to));
+    toConversation = toObj.conversation;
+    toUser = toObj.user;
+    if (!toUser) {
+      callback();
+    } else {
+      if (!(options.identities instanceof Function)) {
+        options.identities = getUserFromIdentities;
+      }
+      options.identities(toUser, function(err, user) {
+        if (user.email !== from) {
+          logger('The specified recipient has an email of ' + user.email + ' but message comes from ' + from + '; rejecting email');
+          callback();
+        } else {
+          callback(toConversation, toUser);
+        }
+      });
+    }
+  }
 };

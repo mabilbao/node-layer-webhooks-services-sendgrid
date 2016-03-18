@@ -95,13 +95,12 @@ function updateObject(message, callback) {
 /* Initialize the layer-sendgrid webhooks server */
 function init() {
   require('../index')({
-    getUser: require('./my-custom-get-user'),
     webhookServices: webhooksClient,
     client: layerClient,
     url: URL,
     app: app,
     sApp: sApp,
-    delay: '30 seconds',
+    delay: '30 minutes',
     secret: 'Lord of the Mog has jammed your radar',
     emailDomain: process.env.EMAIL_DOMAIN,
     sendgridKey: process.env.SENDGRID_API,

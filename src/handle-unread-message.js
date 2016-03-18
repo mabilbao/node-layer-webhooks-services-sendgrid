@@ -13,6 +13,7 @@ var DEFAULT_TEMPLATES = {
   name: '<=% sender.name %>'
 };
 
+
 module.exports = function(options) {
   var sendgrid  = require('sendgrid')(options.sendgridKey);
   var queue = require('kue').createQueue();
@@ -27,82 +28,58 @@ module.exports = function(options) {
   var logger = Debug('layer-webhooks-sendgrid:' + options.name.replace(/\s/g,'-') + ':email-notifier');
 
   // Define the receipts webhook structure
-  var hook = {
-    name: options.name,
-    path: options.path,
-
-    // These events are needed for the register call
-    events: ['message.sent', 'message.read', 'message.delivered', 'message.deleted'],
-
-    // Wait the specified period and then check if they have read the message
-    delay: options.delay,
-
-    receipts: {
-      // Any user whose recipient status is 'sent' or 'delivered' (not 'read')
-      // is of interest once the delay has completed.
-      // Change to 'sent' to ONLY send notifications when a message wasn't delivered.
-      recipient_status_filter: options.recipient_status_filter || ['sent', 'delivered']
-    }
-  };
-
-  // Register the webhook with Layer's Services
-  options.webhookServices.register({
-    secret: options.secret,
-    url: options.url,
-    hooks: [hook]
-  });
-
-  // Listen for events from Layer's Services
-  options.webhookServices.receipts({
-    expressApp: options.app,
-    secret: options.secret,
-    hooks: [hook]
-  });
+  var hook = registerHooks();
 
   // Any Messages that are unread by any participants will be passed into this job
   // after the delay specified above has passed.
   queue.process(hook.name, function(job, done) {
     var message = job.data.message;
     var recipients = job.data.recipients;
-    processMessage(message, recipients, done);
+    var identities = job.data.identities;
+
+    processMessage(message, recipients, identities, done);
   });
+
+  function simplifyIdentity(identity) {
+    if (typeof options.identities !== 'function') {
+      return {
+        displayName: identity.display_name,
+        avatarUrl: identity.avatar_url,
+        firstName: identity.first_name,
+        lastName: identity.last_name,
+        email: identity.email_address,
+        phone: identity.phone_number,
+        metadata: identity.metadata
+      };
+    } else {
+      return identity;
+    }
+  }
 
   /**
    * Any Message with unread participants will call processMessage to handle it.
    * This will iterate over all unread recipients, gather the necessary info and call prepareEmail.
    */
-  function processMessage(message, recipients, done) {
-    options.getUser(message.sender.user_id, function(err, sender) {
-      var count = 0;
-      recipients.forEach(function(recipient) {
-        options.getUser(recipient, function(err, user) {
-          count++;
-          try {
-            if (err) console.error(new Date().toLocaleString() + ': ' + hook.name + ': ', err);
-            else {
-	      queue.createJob(hook.name + ' send-email', {
-		message: message,
-		sender: sender,
-		user: user,
-		userId: recipient
-	      }).attempts(10).backoff({
-		type: 'exponential',
-		delay: 10000
-	      }).save(function(err) {
-		if (err) {
-		  console.error(new Date().toLocaleString() + ': ' + hook.name + ': Unable to create Kue process', err);
-		}
-	      });
-            }
-          } catch(e) {
-            console.error(new Date().toLocaleString() + ': ' + hook.name + ': ', e);
-          }
-          if (count === recipients.length) {
-            done();
-          }
-        });
+  function processMessage(message, recipients, identities, done) {
+    var sender = simplifyIdentity(identities[message.sender.user_id] || {});
+    var count = 0;
+    recipients.forEach(function(recipient) {
+      var user = simplifyIdentity(identities[recipient] || {});
+      queue.createJob(hook.name + ' send-email', {
+        message: message,
+        sender: sender,
+        user: user,
+        userId: recipient
+      }).attempts(10).backoff({
+        type: 'exponential',
+        delay: 10000
+      }).save(function(err) {
+        if (err) {
+          console.error(new Date().toLocaleString() + ': ' + hook.name + ': Unable to create Kue process', err);
+        }
       });
     });
+    done();
   }
 
 
@@ -112,14 +89,20 @@ module.exports = function(options) {
   queue.process(hook.name + ' send-email', function(job, done) {
     var message = job.data.message;
     message.sender = job.data.sender;
-    message.recipient = job.data.user;    
+    message.recipient = job.data.user;
     message.text = message.parts.filter(function(part) {
       return part.mime_type === 'text/plain';
     }).map(function(part) {
       return part.body;
     }).join('\n');
+    var email = job.data.user.email;
 
-    logger('Sending email to ' + job.data.user.email + ' for not reading message');
+    if (!email) {
+      logger('Recipient ' + job.data.userId + ' does not have an email address');
+      return done();
+    }
+
+    logger('Recipient ' + job.data.userId + ' is getting an email at ' + email + ' for not reading message');
     var fromAddress = btoa(JSON.stringify({
       conversation: message.conversation.id,
       user: job.data.userId
@@ -127,10 +110,10 @@ module.exports = function(options) {
 
     if (options.updateObject) {
       options.updateObject(message, function(message) {
-        sendEmail(message, job.data.user.email, fromAddress + '@' + options.emailDomain, done);
+        sendEmail(message, email, fromAddress + '@' + options.emailDomain, done);
       });
     } else {
-      sendEmail(message, job.data.user.email, fromAddress + '@' + options.emailDomain, done);
+      sendEmail(message, email, fromAddress + '@' + options.emailDomain, done);
     }
   });
 
@@ -152,4 +135,42 @@ module.exports = function(options) {
      done(err);
    });
   }
+
+  function registerHooks() {
+    var hook = {
+      name: options.name,
+      path: options.path,
+
+      // These events are needed for the register call
+      events: ['message.sent', 'message.read', 'message.delivered', 'message.deleted'],
+
+      // Wait the specified period and then check if they have read the message
+      delay: options.delay,
+
+      receipts: {
+        // Any user whose recipient status is 'sent' or 'delivered' (not 'read')
+        // is of interest once the delay has completed.
+        // Change to 'sent' to ONLY send notifications when a message wasn't delivered.
+        reportForStatus: options.reportForStatus || ['sent', 'delivered'],
+        identities: 'identities' in options ? options.identities : true
+      }
+    };
+
+    // Register the webhook with Layer's Services
+    options.webhookServices.register({
+      secret: options.secret,
+      url: options.url,
+      hooks: [hook]
+    });
+
+    // Listen for events from Layer's Services
+    options.webhookServices.receipts({
+      expressApp: options.app,
+      secret: options.secret,
+      hooks: [hook]
+    });
+
+    return hook;
+  };
+
 };
