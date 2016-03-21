@@ -25,7 +25,7 @@ The following parameters are supported:
 | secret                | Yes       | Any unique string that nobody outside your company knows; used to validate webhook requests |
 | sendgridKey           | Yes       | Your sendgrid API Key |
 | emailDomain           | Yes       | Full hostname registered with sendgrid; all From fields will use this when sending emails. |
-| getUser               | Yes       | Function that looks up a user's info and returns the results via callback |
+| identities            | Yes       | Function that looks up a user's info and returns the results via callback |
 | templates             | No        | Templates Object for the message, subject and sender |
 | name                  | No        | Name to assign the webhook; needed if your using this repository for multiple webhooks. |
 | path                  | No        | Path that the express app will use to listen for unread message webhook requests. Customize if using multiple copies of this repo. |
@@ -34,16 +34,14 @@ The following parameters are supported:
 | updateObject          | No        | Asynchronous callback for decorating the Message object being fed into the templates |
 
 
-### getUser(userId, callback)
+### identities(userId, callback)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 Layer's Webhooks do not provide key values needed to drive email services.  In order to send users an email, An email address must be provided.  The default behavior is to automatically get the address from the Layer's Identities service; however, this only works if you've actually registered your user's address there.
 
 If you are not using the Layer Identities service and putting email addresses there, then provide a `identities` function when configuring this module. The `identities` function should return a User Object.  Your User Object should provide `name` and `email` fields; other custom fields can be added and used from your templates.
 
 ```javascript
-function identities(userId, callback) {
+function getMyIdentitiy(userId, callback) {
     // Lookup in a database or query a web service to get details of this user
     doLookup(userId, function(err, result) {
        callback(error, {
@@ -53,6 +51,11 @@ function identities(userId, callback) {
        });
     });
 }
+
+require('layer-webhooks-service-sendgrid')({
+    identities: getMyIdentity,
+    ...
+});
 ```
 
 ### updateObject(message, callback)
@@ -156,8 +159,6 @@ var webhooksClient = new LayerWebhooks({
   appId: process.env.LAYER_APP_ID,
   redis: redis
 });
-
-var getUser = require('./my-custom-get-user');
 
 secureExpressApp.listen(PORT, function() {
     require('layer-webhooks-service-sendgrid')({
