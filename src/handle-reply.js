@@ -82,7 +82,6 @@ module.exports = function(options) {
       }
     });
   });
-<<<<<<< HEAD
 
   /**
    * The Default mechansism for getting the identity of the email sender

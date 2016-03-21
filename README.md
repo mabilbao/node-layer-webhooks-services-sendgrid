@@ -37,10 +37,8 @@ The following parameters are supported:
 ### getUser(userId, callback)
 
 <<<<<<< HEAD
-Layer's Webhooks do not provide the recipient's email address, only their userId.  In order to send them an email, we will need to get their email address.  The default behavior is to automatically get the address from the Layer's Identities service; however, this only works if you've actually registered your user's address there.
-=======
-Layer's Webhooks do not provide key values needed to drive email services.  Layer's webhook events provides you with User IDs of recipients of Messages, but does NOT provide personal names, email addresses, or other things needed to contact a person and to provide a personalized message.
->>>>>>> My edits
+<<<<<<< HEAD
+Layer's Webhooks do not provide key values needed to drive email services.  In order to send users an email, An email address must be provided.  The default behavior is to automatically get the address from the Layer's Identities service; however, this only works if you've actually registered your user's address there.
 
 If you are not using the Layer Identities service and putting email addresses there, then provide a `identities` function when configuring this module. The `identities` function should return a User Object.  Your User Object should provide `name` and `email` fields; other custom fields can be added and used from your templates.
 
@@ -101,6 +99,7 @@ A typical template might look like:
 ```
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## The Full API
 
 The following parameters are supported:
@@ -139,8 +138,7 @@ require('layer-webhooks-service-sendgrid')({
 ```
 You can then have a template string that contains `You have a <%= fieldA %> from <%= sender.name %>`.
 
-=======
->>>>>>> My edits
+
 ## Example
 
 ```javascript
@@ -163,10 +161,6 @@ var getUser = require('./my-custom-get-user');
 
 secureExpressApp.listen(PORT, function() {
     require('layer-webhooks-service-sendgrid')({
-<<<<<<< HEAD
-=======
-        getUser: getUser,
->>>>>>> My edits
         client: webhooksClient,
         url: 'https://mydomain.com',
         app: secureExpressApp,
