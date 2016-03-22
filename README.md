@@ -6,7 +6,7 @@ This repository contains an integration between [Layer](https://layer.com) messa
 
 The following actions are needed:
 
-1. Obtain an API key.  This key is needed for the `sendgridKey` parameter.
+1. Obtain an API key.  This key is needed for the `sendgridKey` parameter.  Your key should be configured to enable access to `Parse Webhooks` and `Mail Send`.
 2. Register a subdomain that you can map to `mx.sendgrid.net`.  See https://sendgrid.com/docs/API_Reference/Webhooks/parse.html#-Setup for details.  All emails sent to this subdomain will be received and processed by sendgrid.
 3. Register your webhook.  Go to Settings => Inbound Parse, and add your registered subdomain as host, and this web server's url (ending typically with `/new-mail`) as the URL (e.g. 'https://mysampleco.com/new-mail')
 
