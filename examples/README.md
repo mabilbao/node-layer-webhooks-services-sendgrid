@@ -1,13 +1,6 @@
 # Examples
 
-You can run this standalone server with your app, doing all the configuration needed right here.
-
-Before running, you'll need to open `server.js` and replace
-```javascript
-getUser: require('./my-custom-get-user'),
-```
-with a suitable `getUser` function described in the [README](../README.md).
-
+You can run this example as a standalone server with some configuration.
 
 ## Running in Heroku
 
@@ -48,4 +41,3 @@ You should now be able to send messages, change conversation titles, and see the
   * `LAYER_APP_ID`: Your layer app id; you can find this on the same page as your bearer token
   * `REDIS_URL`: Only needed if your not running redis locally.
 8. Run the server: `npm start`
-

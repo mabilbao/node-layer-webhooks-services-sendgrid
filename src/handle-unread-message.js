@@ -15,7 +15,7 @@ var DEFAULT_TEMPLATES = {
 
 
 module.exports = function(options) {
-  var sendgrid  = require('sendgrid')(options.sendgridKey);
+  var sendgrid  = require('sendgrid')(options.sendgrid.key);
   var queue = require('kue').createQueue();
   if (!options.templates) options.templates = {};
   var templates = {
@@ -110,10 +110,10 @@ module.exports = function(options) {
 
     if (options.updateObject) {
       options.updateObject(message, function(message) {
-        sendEmail(message, email, fromAddress + '@' + options.emailDomain, done);
+        sendEmail(message, email, fromAddress + '@' + options.sendgrid.emailDomain, done);
       });
     } else {
-      sendEmail(message, email, fromAddress + '@' + options.emailDomain, done);
+      sendEmail(message, email, fromAddress + '@' + options.sendgrid.emailDomain, done);
     }
   });
 
@@ -139,7 +139,7 @@ module.exports = function(options) {
   function registerHooks() {
     var hook = {
       name: options.name,
-      path: options.path,
+      path: options.server.unreadMessagePath,
 
       // These events are needed for the register call
       events: ['message.sent', 'message.read', 'message.delivered', 'message.deleted'],
@@ -157,20 +157,19 @@ module.exports = function(options) {
     };
 
     // Register the webhook with Layer's Services
-    options.webhookServices.register({
-      secret: options.secret,
-      url: options.url,
+    options.layer.webhookServices.register({
+      secret: options.layer.secret,
+      url: options.server.url,
       hooks: [hook]
     });
 
     // Listen for events from Layer's Services
-    options.webhookServices.receipts({
-      expressApp: options.app,
-      secret: options.secret,
+    options.layer.webhookServices.receipts({
+      expressApp: options.server.app,
+      secret: options.layer.secret,
       hooks: [hook]
     });
 
     return hook;
   };
-
 };

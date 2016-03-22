@@ -1,9 +1,12 @@
 // Setup the express server
 require('dotenv').load();
+
 var express = require('express');
 var https = require('https');
 var fs = require('fs');
 var app = express();
+
+var getUser = require('./my-custom-get-user');
 
 // If using a separate server for listening to sendgrid, create the new server. Typically needed when using a self-signed certificate
 // as sendgrid will not talk to it... but will talk to an http server.
@@ -95,15 +98,21 @@ function updateObject(message, callback) {
 /* Initialize the layer-sendgrid webhooks server */
 function init() {
   require('../index')({
-    webhookServices: webhooksClient,
-    client: layerClient,
-    url: URL,
-    app: app,
-    sApp: sApp,
+    layer: {
+      webhookServices: webhooksClient,
+      client: layerClient,
+      secret: 'Lord of the Mog has jammed your radar'
+    },
+    server: {
+      url: URL,
+      app: app,
+      sApp: sApp,
+    },
+    sendgrid: {
+      emailDomain: process.env.EMAIL_DOMAIN,
+      key: process.env.SENDGRID_API,
+    },
     delay: '30 minutes',
-    secret: 'Lord of the Mog has jammed your radar',
-    emailDomain: process.env.EMAIL_DOMAIN,
-    sendgridKey: process.env.SENDGRID_API,
     templates: {
       text: '<%= recipient.name %>: you have a new message in <%= conversation.metadata.conversationName %>:\n<%= sender.name %>: <%= text %>\n\n> Replies will be posted back to this Conversation',
       html: '<body><div style="font-size: 1.2em; margin-bottom: 10px">Hello <%= recipient.name %></div><div>You have a new Message in <b><%= conversation.metadata.conversationName %></b></div><div style="padding:10px; border-left: solid 1px #666;"><b><%= sender.name %></b>: <%= text %></div><br/><br/>&gt; Replies will be posted back to this Conversation</body>',
