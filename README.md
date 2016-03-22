@@ -16,21 +16,24 @@ The following parameters are supported:
 
 | Name                  | Required  | Description |
 |-----------------------|-----------|-------------|
-| app                   | Yes       | An express server instance, listening using https protocol. |
-| sApp                  | No        | An express server instance listening on a different port.  Used when app is running on a self signed certificate; sendgrid webhooks won't use a self signed certificate, so a separate express server listening on a separate port must be provided in this case. |
-| webhookServices                | Yes       | An instance of [Webhook Service Client](https://www.npmjs.com/package/layer-webhooks-services) |
-| client                | Yes       | An instance of [Layer Platform API Client](https://www.npmjs.com/package/layer-api) |
-| url                   | Yes       | URL that this server is on; omit paths. Used in combination with the `path` property to register your webhook. |
+| server                | Yes       | Server config |
+| server.app            | Yes       | An express server instance, listening using https protocol. |
+| server.sApp               | No        | An express server instance listening on a different port.  Used when app is running on a self signed certificate; sendgrid webhooks won't use a self signed certificate, so a separate express server listening on a separate port must be provided in this case. |
+| server.url                   | Yes       | URL that this server is on; omit paths. Used in combination with the `path` property to register your webhook. |
+| server.unreadMessagePath  | No        | Path that the express app will use to listen for unread message webhook requests. Customize if using multiple copies of this repo. |
+| sserver.emailReplyPath    | No        | Path that the express app will use to listen for new email webhook requests. |
+| layer                     | Yes       | Layer config |
+| layer.webhookServices     | Yes       | An instance of [Webhook Service Client](https://www.npmjs.com/package/layer-webhooks-services) |
+| layer.client              | Yes       | An instance of [Layer Platform API Client](https://www.npmjs.com/package/layer-api) |
+| layer.secret                | Yes       | Any unique string that nobody outside your company knows; used to validate webhook requests |
+| sendgrid              | Yes       | Sendgrid config |
+| sendgrid.key          | Yes       | Your sendgrid API Key |
+| sendgrid.emailDomain  | Yes       | Full hostname registered with sendgrid; all From fields will use this when sending emails. |
 | delay                 | Yes       | How long to wait before checking for unread messages and notifiying users.  Delays can be configured using a number representing miliseconds, or a string such as '10 minutes' or other strings parsable by [ms](https://github.com/rauchg/ms.js) |
-| secret                | Yes       | Any unique string that nobody outside your company knows; used to validate webhook requests |
-| sendgridKey           | Yes       | Your sendgrid API Key |
-| emailDomain           | Yes       | Full hostname registered with sendgrid; all From fields will use this when sending emails. |
 | identities            | Yes       | Function that looks up a user's info and returns the results via callback |
 | templates             | No        | Templates Object for the message, subject and sender |
 | name                  | No        | Name to assign the webhook; needed if your using this repository for multiple webhooks. |
-| path                  | No        | Path that the express app will use to listen for unread message webhook requests. Customize if using multiple copies of this repo. |
-| sendgrid_path         | No        | Path that the express app will use to listen for new email webhook requests. |
-| recipient_status_filter | No      | Array of user states that justify notification; `['sent']` (Message could not be delivered yet); `['sent', 'delivered']` (Message is undelivered OR simply unread); `['delivered']` (Message is delivered but not read). Default is `['sent', 'delivered']` |
+| reportForStatus       | No      | Array of user states that justify notification; `['sent']` (Message could not be delivered yet); `['sent', 'delivered']` (Message is undelivered OR simply unread); `['delivered']` (Message is delivered but not read). Default is `['sent', 'delivered']` |
 | updateObject          | No        | Asynchronous callback for decorating the Message object being fed into the templates |
 
 
@@ -101,8 +104,6 @@ A typical template might look like:
 }
 ```
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 ## The Full API
 
 The following parameters are supported:

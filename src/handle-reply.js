@@ -15,14 +15,14 @@ var multer = require('multer')({
 }).any();
 
 module.exports = function(options) {
-  var sendgrid = require('sendgrid')(options.sendgridKey);
+  var sendgrid = require('sendgrid')(options.sendgrid.key);
   var queue = require('kue').createQueue();
-  if (!options.sApp) options.sApp = options.app;
+  if (!options.server.sApp) options.server.sApp = options.server.app;
   var webhookName = options.name;
   var logger = Debug('layer-webhooks-sendgrid:' + webhookName.replace(/\s/g,'-') + ':email-listener');
 
   // Listen for webhook events and parse the results
-  options.sApp.post(options.sendgrid_path || '/new-email', multer, function(req, res) {
+  options.server.sApp.post(options.server.emailReplyPath || '/new-email', multer, function(req, res) {
     // Extract the conversation.id and the sender's userId from the email's TO field.
     getContext(req.body.to, req.body.from, function(toConversation, fromUser) {
 
@@ -72,7 +72,7 @@ module.exports = function(options) {
 
   // Listen for requests to post the Message to the Conversation
   queue.process(webhookName + ' post-reply', function(job, done) {
-    options.client.messages.sendTextFromUser(job.data.conversation, job.data.sender, job.data.text, function(err) {
+    options.layer.client.messages.sendTextFromUser(job.data.conversation, job.data.sender, job.data.text, function(err) {
       if (err) {
         console.error(new Date().toLocaleString() + ': ' + webhookName + ': Failed to post email to Conversation', err);
         done(err);
@@ -88,7 +88,7 @@ module.exports = function(options) {
    * and comparing it to the actual email reported by sendgrid.
    */
   function getUserFromIdentities(userId, callback) {
-    options.client.identities.get(userId, function(err, response) {
+    options.layer.client.identities.get(userId, function(err, response) {
       var identity = err ? null : response.body;
       if (identity) identity.email = identity.email_address;
       callback(err, identity);
@@ -103,7 +103,7 @@ module.exports = function(options) {
   function getContext(toFull, from, callback) {
     var toConversation, fromUser;
     to = toFull.split(/\s*,\s*/).filter(function(recipient) {
-      return recipient.indexOf(options.emailDomain) !== -1;
+      return recipient.indexOf(options.sendgrid.emailDomain) !== -1;
     })[0];
 
     if (to.indexOf('<') !== -1) to = to.replace(/^.*<(.*?)>.*$/m, '$1');

@@ -13,7 +13,6 @@ var DEFAULT_NAME = 'Sendgrid Integration';
  */
 module.exports = function(options) {
   if (!options.name) options.name = DEFAULT_NAME;
-  if (!options.path) options.path = DEFAULT_PATH;
   require('./src/handle-unread-message')(options);
   require('./src/handle-reply')(options);
 };

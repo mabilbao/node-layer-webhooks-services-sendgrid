@@ -98,19 +98,21 @@ function updateObject(message, callback) {
 /* Initialize the layer-sendgrid webhooks server */
 function init() {
   require('../index')({
-<<<<<<< HEAD
-=======
-    getUser: getUser,
->>>>>>> bf62b037657dd6ca5a7f56392ebbee4b8709a4d6
-    webhookServices: webhooksClient,
-    client: layerClient,
-    url: URL,
-    app: app,
-    sApp: sApp,
+    layer: {
+      webhookServices: webhooksClient,
+      client: layerClient,
+      secret: 'Lord of the Mog has jammed your radar'
+    },
+    server: {
+      url: URL,
+      app: app,
+      sApp: sApp,
+    },
+    sendgrid: {
+      emailDomain: process.env.EMAIL_DOMAIN,
+      key: process.env.SENDGRID_API,
+    },
     delay: '30 minutes',
-    secret: 'Lord of the Mog has jammed your radar',
-    emailDomain: process.env.EMAIL_DOMAIN,
-    sendgridKey: process.env.SENDGRID_API,
     templates: {
       text: '<%= recipient.name %>: you have a new message in <%= conversation.metadata.conversationName %>:\n<%= sender.name %>: <%= text %>\n\n> Replies will be posted back to this Conversation',
       html: '<body><div style="font-size: 1.2em; margin-bottom: 10px">Hello <%= recipient.name %></div><div>You have a new Message in <b><%= conversation.metadata.conversationName %></b></div><div style="padding:10px; border-left: solid 1px #666;"><b><%= sender.name %></b>: <%= text %></div><br/><br/>&gt; Replies will be posted back to this Conversation</body>',
