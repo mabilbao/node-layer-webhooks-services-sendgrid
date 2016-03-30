@@ -1,4 +1,5 @@
 # Layer Webhooks Service - Sendgrid
+[![npm version](http://img.shields.io/npm/v/layer-webhooks-services-sendgrid.svg)](https://npmjs.org/package/layer-webhooks-services-sendgrid)
 
 This repository contains an integration between [Layer](https://layer.com) messaging service and [Sendgrid](http://sendgrid.com/) email service. It is designed to notify participants about unread messages by sending an email.
 
