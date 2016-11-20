@@ -20,7 +20,7 @@ module.exports = function(options) {
   if (!options.templates) options.templates = {};
   var templates = {
     text: _.template(options.templates.text || DEFAULT_TEMPLATES.text),
-    html: _.template(options.templates.html || DEFAULT_TEMPLATEs.html),
+    html: _.template(options.templates.html || DEFAULT_TEMPLATES.html),
     subject: _.template(options.templates.subject || DEFAULT_TEMPLATES.subject),
     fromName: _.template(options.templates.fromName || DEFAULT_TEMPLATES.name)
   };
