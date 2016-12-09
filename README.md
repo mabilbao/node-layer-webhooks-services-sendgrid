@@ -15,27 +15,27 @@ The following actions are needed:
 
 The following parameters are supported:
 
-| Name                  | Required  | Description |
-|-----------------------|-----------|-------------|
-| server                | Yes       | Server config |
-| server.app            | Yes       | An express server instance, listening using https protocol. |
-| server.sApp               | No        | An express server instance listening on a different port.  Used when app is running on a self signed certificate; sendgrid webhooks won't use a self signed certificate, so a separate express server listening on a separate port must be provided in this case. |
-| server.url                   | Yes       | URL that this server is on; omit paths. Used in combination with the `path` property to register your webhook. |
-| server.unreadMessagePath  | No        | Path that the express app will use to listen for unread message webhook requests. Customize if using multiple copies of this repo. |
-| sserver.emailReplyPath    | No        | Path that the express app will use to listen for new email webhook requests. |
-| layer                     | Yes       | Layer config |
-| layer.webhookServices     | Yes       | An instance of [Webhook Service Client](https://www.npmjs.com/package/layer-webhooks-services) |
-| layer.client              | Yes       | An instance of [Layer Platform API Client](https://www.npmjs.com/package/layer-api) |
-| layer.secret                | Yes       | Any unique string that nobody outside your company knows; used to validate webhook requests |
-| sendgrid              | Yes       | Sendgrid config |
-| sendgrid.key          | Yes       | Your sendgrid API Key |
-| sendgrid.emailDomain  | Yes       | Full hostname registered with sendgrid; all From fields will use this when sending emails. |
-| delay                 | Yes       | How long to wait before checking for unread messages and notifiying users.  Delays can be configured using a number representing miliseconds, or a string such as '10 minutes' or other strings parsable by [ms](https://github.com/rauchg/ms.js) |
-| identities            | Yes       | Function that looks up a user's info and returns the results via callback |
-| templates             | No        | Templates Object for the message, subject and sender |
-| name                  | No        | Name to assign the webhook; needed if your using this repository for multiple webhooks. |
-| reportForStatus       | No      | Array of user states that justify notification; `['sent']` (Message could not be delivered yet); `['sent', 'delivered']` (Message is undelivered OR simply unread); `['delivered']` (Message is delivered but not read). Default is `['sent', 'delivered']` |
-| updateObject          | No        | Asynchronous callback for decorating the Message object being fed into the templates |
+| Name                     | Required | Description                              |
+| ------------------------ | -------- | ---------------------------------------- |
+| server                   | Yes      | Server config                            |
+| server.app               | Yes      | An express server instance, listening using https protocol. |
+| server.sApp              | No       | An express server instance listening on a different port.  Used when app is running on a self signed certificate; sendgrid webhooks won't use a self signed certificate, so a separate express server listening on a separate port must be provided in this case. |
+| server.url               | Yes      | URL that this server is on; omit paths. Used in combination with the `path` property to register your webhook. |
+| server.unreadMessagePath | No       | Path that the express app will use to listen for unread message webhook requests. Customize if using multiple copies of this repo. |
+| sserver.emailReplyPath   | No       | Path that the express app will use to listen for new email webhook requests. |
+| layer                    | Yes      | Layer config                             |
+| layer.webhookServices    | Yes      | An instance of [Webhook Service Client](https://www.npmjs.com/package/layer-webhooks-services) |
+| layer.client             | Yes      | An instance of [Layer Platform API Client](https://www.npmjs.com/package/layer-api) |
+| layer.secret             | Yes      | Any unique string that nobody outside your company knows; used to validate webhook requests |
+| sendgrid                 | Yes      | Sendgrid config                          |
+| sendgrid.key             | Yes      | Your sendgrid API Key                    |
+| sendgrid.emailDomain     | Yes      | Full hostname registered with sendgrid; all From fields will use this when sending emails. |
+| delay                    | Yes      | How long to wait before checking for unread messages and notifiying users.  Delays can be configured using a number representing miliseconds, or a string such as '10 minutes' or other strings parsable by [ms](https://github.com/rauchg/ms.js) |
+| identities               | Yes      | Function that looks up a user's info and returns the results via callback |
+| templates                | No       | Templates Object for the message, subject and sender |
+| name                     | No       | Name to assign the webhook; needed if your using this repository for multiple webhooks. |
+| reportForStatus          | No       | Array of user states that justify notification; `['sent']` (Message could not be delivered yet); `['sent', 'delivered']` (Message is undelivered OR simply unread); `['delivered']` (Message is delivered but not read). Default is `['sent', 'delivered']` |
+| updateObject             | No       | Asynchronous callback for decorating the Message object being fed into the templates |
 
 
 ### identities(userId, callback)
@@ -152,3 +152,10 @@ secureExpressApp.listen(PORT, function() {
     });
 });
 ```
+
+## Multiple Webhook Services
+
+This module can be used in conjunction with the [vanilla webhooks modules](https://github.com/layerhq/node-layer-webhooks-services) to register additional webhook services. However, the Sendgrid integration should be configured independently of any others, especially any other webhook that handles `message.sent` or other `message` webhooks. In particular:
+
+* Set a unique `name` in the `options`
+* Use a unique endpoint for `server.unreadMessagePath`
